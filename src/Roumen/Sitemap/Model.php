@@ -1,26 +1,13 @@
-<?php namespace Roumen\Sitemap;
+<?php
+
+namespace Roumen\Sitemap;
 
 class Model
 {
 
-    /**
-     * @var array
-     */
-    public $items = [];
-
-    /**
-     * @var array
-     */
-    public $sitemaps = [];
-
-    /**
-     * @var null
-     */
+    public $items = array();
+    public $sitemaps = array();
     private $title = null;
-
-    /**
-     * @var null
-     */
     private $link = null;
 
     /**
@@ -52,6 +39,13 @@ class Model
     private $escaping = true;
 
     /**
+     * Custom path to views
+     *
+     * @var string
+     */
+    private $viewPath = 'sitemap.';
+
+    /**
      * Populating model variables from configuation file
      * @param array $config
      */
@@ -61,6 +55,7 @@ class Model
         $this->cacheKey = isset($config['cache_key']) ? $config['cache_key'] : $this->cacheKey;
         $this->cacheDuration = isset($config['cache_duration']) ? $config['cache_duration'] : $this->cacheDuration;
         $this->escaping = isset($config['escaping']) ? $config['escaping'] : $this->escaping;
+        $this->viewPath = isset($config['viewPath']) ? $config['viewPath'] : $this->viewPath;
     }
 
     public function getItems()
@@ -103,9 +98,19 @@ class Model
         return $this->escaping;
     }
 
+    public function getViewPath()
+    {
+        return $this->viewPath;
+    }
+
     public function setEscaping($b)
     {
         $this->escaping = $b;
+    }
+
+    public function setViewPath($path)
+    {
+        $this->viewPath = $path;
     }
 
     public function setItems($items)
@@ -132,6 +137,7 @@ class Model
     {
         $this->link = $link;
     }
+
 
     public function setUseCache($useCache)
     {

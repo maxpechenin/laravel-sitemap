@@ -1,4 +1,6 @@
-<?php namespace Roumen\Sitemap;
+<?php
+
+namespace Roumen\Sitemap;
 
 /**
  * Sitemap class for laravel-sitemap package.
@@ -8,14 +10,16 @@
  * @link http://roumen.it/projects/laravel-sitemap
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\View;
+use Config,
+    Response,
+    View,
+    File,
+    Cache;
 
 class Sitemap
 {
+
+
     /**
      * Model instance
      * @var Model $model
@@ -65,11 +69,11 @@ class Sitemap
      * @param string $freq
      * @param array  $images
      * @param string $title
-     * @param array $translations
+     * @param string $translation
      *
      * @return void
      */
-    public function add($loc, $lastmod = null, $priority = null, $freq = null, $images = array(), $title = null, $translations = array())
+    public function add($loc, $lastmod = null, $priority = null, $freq = null, $images = array(), $title = null, $translation = array())
     {
 
         if ($this->model->getEscaping())
@@ -89,30 +93,26 @@ class Sitemap
                 }
             }
 
-            if ($translations)
+            if ($translation)
             {
-                foreach($translations as $translation)
+                foreach ($translation as $key => $value)
                 {
-                    foreach ($translation as $key => $value)
-                    {
-                        $translation[$key] = htmlentities($value, ENT_XML1);
-                    }
+                    $translation[$key] = htmlentities($value, ENT_XML1);
                 }
             }
-
         }
 
 
         $this->model->setItems(
-                array(
-                    'loc' => $loc,
-                    'lastmod' => $lastmod,
-                    'priority' => $priority,
-                    'freq' => $freq,
-                    'images' => $images,
-                    'title' => $title,
-                    'translations' => $translations
-                )
+            array(
+                'loc' => $loc,
+                'lastmod' => $lastmod,
+                'priority' => $priority,
+                'freq' => $freq,
+                'images' => $images,
+                'title' => $title,
+                'translation' => $translation
+            )
         );
     }
 
@@ -128,10 +128,10 @@ class Sitemap
     public function addSitemap($loc, $lastmod = null)
     {
         $this->model->setSitemaps(
-                array(
-                    'loc' => $loc,
-                    'lastmod' => $lastmod
-                )
+            array(
+                'loc' => $loc,
+                'lastmod' => $lastmod
+            )
         );
     }
 
@@ -170,9 +170,9 @@ class Sitemap
         {
             ($format == 'sitemapindex') ? $this->model->sitemaps = Cache::get($this->model->getCacheKey()) : $this->model->items = Cache::get($this->model->getCacheKey());
         } elseif ($this->model->getUseCache())
-            {
-               ($format == 'sitemapindex') ? Cache::put($this->model->getCacheKey(), $this->model->getSitemaps(), $this->model->getCacheDuration()) : Cache::put($this->model->getCacheKey(), $this->model->getItems(), $this->model->getCacheDuration());
-            }
+        {
+            ($format == 'sitemapindex') ? Cache::put($this->model->getCacheKey(), $this->model->getSitemaps(), $this->model->getCacheDuration()) : Cache::put($this->model->getCacheKey(), $this->model->getItems(), $this->model->getCacheDuration());
+        }
 
         if (!$this->model->getLink())
         {
@@ -197,21 +197,21 @@ class Sitemap
 
             // TODO option 2: split them to two partial sitemaps and add them to sitemapindex
         }
-
+        $viewPath = $this->model->getViewPath();
         switch ($format)
         {
             case 'ror-rss':
-                return array('content' => View::make('sitemap::ror-rss', array('items' => $this->model->getItems(), 'channel' => $channel))->render(), 'headers' => array('Content-type' => 'text/rss+xml; charset=utf-8'));
+                return array('content' => View::make($viewPath . 'ror-rss', array('items' => $this->model->getItems(), 'channel' => $channel))->render(), 'headers' => array('Content-type' => 'text/rss+xml; charset=utf-8'));
             case 'ror-rdf':
-                return array('content' => View::make('sitemap::ror-rdf', array('items' => $this->model->getItems(), 'channel' => $channel))->render(), 'headers' => array('Content-type' => 'text/rdf+xml; charset=utf-8'));
+                return array('content' => View::make($viewPath . 'ror-rdf', array('items' => $this->model->getItems(), 'channel' => $channel))->render(), 'headers' => array('Content-type' => 'text/rdf+xml; charset=utf-8'));
             case 'html':
-                return array('content' => View::make('sitemap::html', array('items' => $this->model->getItems(), 'channel' => $channel))->render(), 'headers' => array('Content-type' => 'text/html'));
+                return array('content' => View::make($viewPath . 'html', array('items' => $this->model->getItems(), 'channel' => $channel))->render(), 'headers' => array('Content-type' => 'text/html'));
             case 'txt':
-                return array('content' => View::make('sitemap::txt', array('items' => $this->model->getItems()))->render(), 'headers' => array('Content-type' => 'text/plain'));
+                return array('content' => View::make($viewPath . 'txt', array('items' => $this->model->getItems()))->render(), 'headers' => array('Content-type' => 'text/plain'));
             case 'sitemapindex':
-                return array('content' => View::make('sitemap::sitemapindex', array('sitemaps' => $this->model->getSitemaps()))->render(), 'headers' => array('Content-type' => 'text/xml; charset=utf-8'));
+                return array('content' => View::make($viewPath . 'sitemapindex', array('sitemaps' => $this->model->getSitemaps()))->render(), 'headers' => array('Content-type' => 'text/xml; charset=utf-8'));
             default:
-                return array('content' => View::make('sitemap::xml', array('items' => $this->model->getItems()))->render(), 'headers' => array('Content-type' => 'text/xml; charset=utf-8'));
+                return array('content' => View::make($viewPath . 'xml', array('items' => $this->model->getItems()))->render(), 'headers' => array('Content-type' => 'text/xml; charset=utf-8'));
         }
     }
 
@@ -240,9 +240,9 @@ class Sitemap
         {
             return "Success! Your sitemap file is created.";
         } else
-            {
-                return "Error! Your sitemap file is NOT created.";
-            }
+        {
+            return "Error! Your sitemap file is NOT created.";
+        }
 
         // clear
         ($format == 'sitemapindex') ? $this->model->sitemaps = array() : $this->model->items = array();
@@ -266,5 +266,6 @@ class Sitemap
 
         return false;
     }
+
 
 }
